@@ -1,12 +1,13 @@
 "use strict";
 
-/* globals describe expect it beforeAll */
+/* globals describe expect it */
 const path = require("path");
 const fs = require("fs");
 const vm = require("vm");
 const mkdirp = require("mkdirp");
 const rimraf = require("rimraf");
 const checkArrayExpectation = require("./checkArrayExpectation");
+const createLazyTestEnv = require("./helpers/createLazyTestEnv");
 const FakeDocument = require("./helpers/FakeDocument");
 
 const Stats = require("../lib/Stats");
@@ -17,7 +18,7 @@ describe("ConfigTestCases", () => {
 	const casesPath = path.join(__dirname, "configCases");
 	let categories = fs.readdirSync(casesPath);
 
-	jest.setTimeout(10000);
+	jest.setTimeout(20000);
 
 	categories = categories.map(cat => {
 		return {
@@ -32,7 +33,9 @@ describe("ConfigTestCases", () => {
 					const testDirectory = path.join(casesPath, cat, testName);
 					const filterPath = path.join(testDirectory, "test.filter.js");
 					if (fs.existsSync(filterPath) && !require(filterPath)()) {
-						describe.skip(testName, () => it("filtered"));
+						describe.skip(testName, () => {
+							it("filtered", () => {});
+						});
 						return false;
 					}
 					return true;
@@ -51,9 +54,6 @@ describe("ConfigTestCases", () => {
 						category.name,
 						testName
 					);
-					const exportedTests = [];
-					const exportedBeforeEach = [];
-					const exportedAfterEach = [];
 					it(
 						testName + " should compile",
 						() =>
@@ -87,12 +87,13 @@ describe("ConfigTestCases", () => {
 								});
 								let testConfig = {
 									findBundle: function(i, options) {
+										const ext = path.extname(options.output.filename);
 										if (
 											fs.existsSync(
-												path.join(options.output.path, "bundle" + i + ".js")
+												path.join(options.output.path, "bundle" + i + ext)
 											)
 										) {
-											return "./bundle" + i + ".js";
+											return "./bundle" + i + ext;
 										}
 									},
 									timeout: 30000
@@ -106,6 +107,7 @@ describe("ConfigTestCases", () => {
 								} catch (e) {
 									// ignored
 								}
+								if (testConfig.timeout) setDefaultTimeout(testConfig.timeout);
 
 								webpack(options, (err, stats) => {
 									if (err) {
@@ -157,22 +159,6 @@ describe("ConfigTestCases", () => {
 									)
 										return;
 
-									function _it(title, fn) {
-										exportedTests.push({
-											title,
-											fn,
-											timeout: testConfig.timeout
-										});
-									}
-
-									function _beforeEach(fn) {
-										return exportedBeforeEach.push(fn);
-									}
-
-									function _afterEach(fn) {
-										return exportedAfterEach.push(fn);
-									}
-
 									const globalContext = {
 										console: console,
 										expect: expect,
@@ -190,7 +176,6 @@ describe("ConfigTestCases", () => {
 
 									function _require(currentDirectory, module) {
 										if (Array.isArray(module) || /^\.\.?\//.test(module)) {
-											let fn;
 											let content;
 											let p;
 											if (Array.isArray(module)) {
@@ -205,43 +190,49 @@ describe("ConfigTestCases", () => {
 												p = path.join(currentDirectory, module);
 												content = fs.readFileSync(p, "utf-8");
 											}
+											const m = {
+												exports: {}
+											};
+											let runInNewContext = false;
+											const moduleScope = {
+												require: _require.bind(null, path.dirname(p)),
+												importScripts: _require.bind(null, path.dirname(p)),
+												module: m,
+												exports: m.exports,
+												__dirname: path.dirname(p),
+												__filename: p,
+												it: _it,
+												beforeEach: _beforeEach,
+												afterEach: _afterEach,
+												expect,
+												jest,
+												_globalAssign: { expect },
+												nsObj: m => {
+													Object.defineProperty(m, Symbol.toStringTag, {
+														value: "Module"
+													});
+													return m;
+												}
+											};
 											if (
 												options.target === "web" ||
 												options.target === "webworker"
 											) {
-												fn = vm.runInNewContext(
-													"(function(require, module, exports, __dirname, __filename, it, beforeEach, afterEach, expect, jest, window) {" +
-														content +
-														"\n})",
-													globalContext,
-													p
-												);
-											} else {
-												fn = vm.runInThisContext(
-													"(function(require, module, exports, __dirname, __filename, it, beforeEach, afterEach, expect, jest) {" +
-														"global.expect = expect; " +
-														content +
-														"\n})",
-													p
-												);
+												moduleScope.window = globalContext;
+												moduleScope.self = globalContext;
+												runInNewContext = true;
 											}
-											const m = {
-												exports: {}
-											};
-											fn.call(
-												m.exports,
-												_require.bind(null, path.dirname(p)),
-												m,
-												m.exports,
-												path.dirname(p),
-												p,
-												_it,
-												_beforeEach,
-												_afterEach,
-												expect,
-												jest,
-												globalContext
-											);
+											if (testConfig.moduleScope) {
+												testConfig.moduleScope(moduleScope);
+											}
+											const args = Object.keys(moduleScope).join(", ");
+											if (!runInNewContext)
+												content = `Object.assign(global, _globalAssign); ${content}`;
+											const code = `(function({${args}}) {${content}\n})`;
+											const fn = runInNewContext
+												? vm.runInNewContext(code, globalContext, p)
+												: vm.runInThisContext(code, p);
+											fn.call(m.exports, moduleScope);
 											return m.exports;
 										} else if (
 											testConfig.modules &&
@@ -253,6 +244,7 @@ describe("ConfigTestCases", () => {
 									let filesCount = 0;
 
 									if (testConfig.noTests) return process.nextTick(done);
+									if (testConfig.beforeExecute) testConfig.beforeExecute();
 									for (let i = 0; i < optionsArr.length; i++) {
 										const bundlePath = testConfig.findBundle(i, optionsArr[i]);
 										if (bundlePath) {
@@ -270,31 +262,21 @@ describe("ConfigTestCases", () => {
 												"Should have found at least one bundle file per webpack config"
 											)
 										);
-									if (exportedTests.length < filesCount)
-										return done(new Error("No tests exported by test case"));
 									if (testConfig.afterExecute) testConfig.afterExecute();
-									const asyncSuite = describe(`ConfigTestCases ${
-										category.name
-									} ${testName} exported tests`, () => {
-										exportedBeforeEach.forEach(beforeEach);
-										exportedAfterEach.forEach(afterEach);
-										exportedTests.forEach(
-											({ title, fn, timeout }) =>
-												fn
-													? fit(title, fn, timeout)
-													: fit(title, () => {}).pend("Skipped")
-										);
-									});
-									// workaround for jest running clearSpies on the wrong suite (invoked by clearResourcesForRunnable)
-									asyncSuite.disabled = true;
-
-									jasmine
-										.getEnv()
-										.execute([asyncSuite.id], asyncSuite)
-										.then(done, done);
+									if (getNumberOfTests() < filesCount)
+										return done(new Error("No tests exported by test case"));
+									done();
 								});
 							})
 					);
+
+					const {
+						it: _it,
+						beforeEach: _beforeEach,
+						afterEach: _afterEach,
+						setDefaultTimeout,
+						getNumberOfTests
+					} = createLazyTestEnv(jasmine.getEnv(), 10000);
 				});
 			});
 		});

@@ -1,6 +1,36 @@
 # Examples
+
+## Table of Contents
+
+1. [Aggressive Merging](#aggressive-merging)
+2. [Chunk](#chunk)
+3. [Code Splitted](#code-splitted)
+4. [Code Splitting](#code-splitting)
+5. [Coffee Script](#coffee-script)
+6. [CommonJS](#commonjs)
+7. [DLL](#dll)
+8. [Externals](#externals)
+9. [Harmony](#harmony)
+10. [HTTP2 Aggressive Splitting](#http2-aggressive-splitting)
+11. [Hybrid Routing](#hybrid-routing)
+12. [i18n](#i18n)
+13. [Loader](#loader)
+14. [Mixed](#mixed)
+15. [Multi Compiler](#multi-compiler)
+16. [Multi Part Library](#multi-part-library)
+17. [Multiple Entry Points](#multiple-entry-points)
+18. [Require Context](#require-context)
+19. [Require Resolve](#require-resolve)
+20. [Scope Hoisting](#scope-hoisting)
+21. [Side Effects](#side-effects)
+22. [Source Map](#source-map)
+23. [Web Worker](#web-worker)
+24. [Requests](#requests)
+25. [Building an Example](#building-an-example)
+
+
 ## Aggressive Merging
-[aggressive-merging](aggressive-merging) 
+[aggressive-merging](aggressive-merging)
 
 ## Chunk
 [chunkhash](chunkhash)
@@ -31,9 +61,9 @@
 
 [code-splitting-bundle-loader](code-splitting-bundle-loader) example demonstrating Code Splitting through the builder loader
 
-[code-splitting-harmony](code-splitting-harmony) 
+[code-splitting-harmony](code-splitting-harmony)
 
-[code-splitting-native-import-context](code-splitting-native-import-context) 
+[code-splitting-native-import-context](code-splitting-native-import-context)
 
 [code-splitting-specify-chunk-name](code-splitting-specify-chunk-name)
 
@@ -110,7 +140,7 @@ If you think an example is missing, please report it as issue. :)
 
 # Building an Example
 1. Run `yarn` in the root of the project.
-2. Run `yarn link webpack` in the root of the project.
+2. Run `yarn setup` in the root of the project.
 3. Run `yarn add --dev webpack-cli` in the root of the project.
 4. Run `node build.js` in the specific example directory. (Ex: `cd examples/commonjs && node build.js`)
 

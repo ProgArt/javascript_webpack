@@ -94,6 +94,42 @@ describe("Errors", () => {
 			}
 		);
 	});
+	it("should report require.main.require as unsupported", done => {
+		getErrors(
+			{
+				mode: "development",
+				entry: "./require.main.require"
+			},
+			(errors, warnings) => {
+				expect(errors).toHaveLength(0);
+				expect(warnings).toHaveLength(1);
+				const lines = warnings[0].split("\n");
+				expect(lines[0]).toMatch(/require.main.require\.js/);
+				expect(lines[1]).toMatch(
+					/require.main.require is not supported by webpack/
+				);
+				done();
+			}
+		);
+	});
+	it("should report module.parent.require as unsupported", done => {
+		getErrors(
+			{
+				mode: "development",
+				entry: "./module.parent.require"
+			},
+			(errors, warnings) => {
+				expect(errors).toHaveLength(0);
+				expect(warnings).toHaveLength(1);
+				const lines = warnings[0].split("\n");
+				expect(lines[0]).toMatch(/module.parent.require\.js/);
+				expect(lines[1]).toMatch(
+					/module.parent.require is not supported by webpack/
+				);
+				done();
+			}
+		);
+	});
 	it("should warn about case-sensitive module names", done => {
 		getErrors(
 			{
@@ -353,6 +389,162 @@ describe("Errors", () => {
 				expect(messages[1]).toMatch(
 					/^Module build failed: Error: Final loader \(.+\) didn't return a Buffer or String/
 				);
+				done();
+			}
+		);
+	});
+
+	const identityLoader = path.resolve(
+		__dirname,
+		"fixtures/errors/identity-loader.js"
+	);
+	const addCommentLoader = path.resolve(
+		__dirname,
+		"fixtures/errors/add-comment-loader.js"
+	);
+
+	it("should show loader used if it is present when module parsing fails", done => {
+		getErrors(
+			{
+				mode: "development",
+				entry: "./abc.html",
+				module: {
+					rules: [
+						{
+							test: /\.html$/,
+							use: [{ loader: identityLoader }]
+						}
+					]
+				}
+			},
+			(errors, warnings) => {
+				expect(errors).toMatchInlineSnapshot(`
+Array [
+  "./abc.html 1:0
+Module parse failed: Unexpected token (1:0)
+File was processed with these loaders:
+ * ./identity-loader.js
+You may need an additional loader to handle the result of these loaders.
+> <!DOCTYPE html>
+| <html>
+| 	<body>",
+]
+`);
+				expect(errors[0]).toMatch("File was processed with these loaders");
+				done();
+			}
+		);
+	});
+
+	it("should show all loaders used if they are in config when module parsing fails", done => {
+		getErrors(
+			{
+				mode: "development",
+				entry: "./abc.html",
+				module: {
+					rules: [
+						{
+							test: /\.html$/,
+							use: [{ loader: identityLoader }, { loader: addCommentLoader }]
+						}
+					]
+				}
+			},
+			(errors, warnings) => {
+				expect(errors).toMatchInlineSnapshot(`
+Array [
+  "./abc.html 1:0
+Module parse failed: Unexpected token (1:0)
+File was processed with these loaders:
+ * ./identity-loader.js
+ * ./add-comment-loader.js
+You may need an additional loader to handle the result of these loaders.
+> <!DOCTYPE html>
+| <html>
+| 	<body>",
+]
+`);
+				expect(errors[0]).toMatch("File was processed with these loaders");
+				done();
+			}
+		);
+	});
+
+	it("should show all loaders used if use is a string", done => {
+		getErrors(
+			{
+				mode: "development",
+				entry: "./abc.html",
+				module: {
+					rules: [
+						{ test: /\.html$/, use: identityLoader },
+						{ test: /\.html$/, use: addCommentLoader }
+					]
+				}
+			},
+			(errors, warnings) => {
+				expect(errors).toMatchInlineSnapshot(`
+Array [
+  "./abc.html 1:0
+Module parse failed: Unexpected token (1:0)
+File was processed with these loaders:
+ * ./identity-loader.js
+ * ./add-comment-loader.js
+You may need an additional loader to handle the result of these loaders.
+> <!DOCTYPE html>
+| <html>
+| 	<body>",
+]
+`);
+				expect(errors[0]).toMatch("File was processed with these loaders");
+				done();
+			}
+		);
+	});
+
+	it("should show 'no loaders are configured to process this file' if loaders are not included in config when module parsing fails", done => {
+		getErrors(
+			{
+				mode: "development",
+				entry: "./abc.html",
+				module: {}
+			},
+			(errors, warnings) => {
+				expect(errors).toMatchInlineSnapshot(`
+Array [
+  "./abc.html 1:0
+Module parse failed: Unexpected token (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+> <!DOCTYPE html>
+| <html>
+| 	<body>",
+]
+`);
+				expect(errors[0]).toMatch(
+					"no loaders are configured to process this file"
+				);
+				done();
+			}
+		);
+	});
+
+	it("should show 'source code omitted for this binary file' when module parsing fails for binary files", done => {
+		const folder = path.join(__dirname, "/fixtures");
+		getErrors(
+			{
+				mode: "development",
+				entry: path.resolve(folder, "./font.ttf"),
+				module: {}
+			},
+			(errors, warnings) => {
+				expect(errors).toMatchInlineSnapshot(`
+Array [
+  "../font.ttf 1:0
+Module parse failed: Unexpected character ' ' (1:0)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)",
+]
+`);
 				done();
 			}
 		);

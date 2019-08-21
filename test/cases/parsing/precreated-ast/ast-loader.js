@@ -1,17 +1,15 @@
 "use strict";
 
-const acorn = require("acorn-dynamic-import").default;
+const acorn = require("acorn");
+const acornParser = acorn.Parser;
 
 module.exports = function(source) {
 	const comments = [];
-	const ast = acorn.parse(source, {
+	const ast = acornParser.parse(source, {
 		ranges: true,
 		locations: true,
-		ecmaVersion: 2017,
+		ecmaVersion: 11,
 		sourceType: "module",
-		plugins: {
-			dynamicImport: true
-		},
 		onComment: comments
 	});
 

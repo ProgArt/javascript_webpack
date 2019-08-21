@@ -1,6 +1,6 @@
 # example.js
 
-``` javascript
+```javascript
 // use our loader
 console.dir(require("./loader!./file"));
 
@@ -11,13 +11,13 @@ console.dir(require("!css-loader!./test.css")); // manual
 
 # file.js
 
-``` javascript
+```javascript
 exports.foo = "bar";
 ```
 
 # loader.js
 
-``` javascript
+```javascript
 module.exports = function(content) {
 	return "exports.answer = 42;\n" + content;
 }
@@ -25,7 +25,7 @@ module.exports = function(content) {
 
 # test.css
 
-``` css
+```css
 .some-class {
 	color: hotpink;
 }
@@ -35,7 +35,7 @@ module.exports = function(content) {
 
 <details><summary><code>/******/ (function(modules) { /* webpackBootstrap */ })</code></summary>
 
-``` javascript
+```javascript
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -74,17 +74,32 @@ module.exports = function(content) {
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, {
-/******/ 				configurable: false,
-/******/ 				enumerable: true,
-/******/ 				get: getter
-/******/ 			});
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
 /******/ 		}
 /******/ 	};
 /******/
 /******/ 	// define __esModule on exports
 /******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
 /******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
 /******/ 	};
 /******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
@@ -111,7 +126,7 @@ module.exports = function(content) {
 
 </details>
 
-``` javascript
+```javascript
 /******/ ([
 /* 0 */
 /*!********************!*\
@@ -141,107 +156,112 @@ exports.foo = "bar";
 
 /***/ }),
 /* 2 */
-/*!****************************************************!*\
-  !*** (webpack)/node_modules/css-loader!./test.css ***!
-  \****************************************************/
+/*!****************************************************************!*\
+  !*** (webpack)/node_modules/css-loader/dist/cjs.js!./test.css ***!
+  \****************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(/*! ../../node_modules/css-loader/lib/css-base.js */ 3)(false);
-// imports
+exports = module.exports = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ 3)(false);
+// Module
+exports.push([module.i, ".some-class {\n\tcolor: hotpink;\n}\n", ""]);
 
-
-// module
-exports.push([module.i, ".some-class {\r\n\tcolor: hotpink;\r\n}\r\n", ""]);
-
-// exports
 
 
 /***/ }),
 /* 3 */
-/*!*********************************************************!*\
-  !*** (webpack)/node_modules/css-loader/lib/css-base.js ***!
-  \*********************************************************/
+/*!*************************************************************!*\
+  !*** (webpack)/node_modules/css-loader/dist/runtime/api.js ***!
+  \*************************************************************/
 /*! no static exports found */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 
 /*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
+  MIT License http://www.opensource.org/licenses/mit-license.php
+  Author Tobias Koppers @sokra
 */
 // css base code, injected by the css-loader
-module.exports = function(useSourceMap) {
-	var list = [];
+module.exports = function (useSourceMap) {
+  var list = []; // return the list of modules as css string
 
-	// return the list of modules as css string
-	list.toString = function toString() {
-		return this.map(function (item) {
-			var content = cssWithMappingToString(item, useSourceMap);
-			if(item[2]) {
-				return "@media " + item[2] + "{" + content + "}";
-			} else {
-				return content;
-			}
-		}).join("");
-	};
+  list.toString = function toString() {
+    return this.map(function (item) {
+      var content = cssWithMappingToString(item, useSourceMap);
 
-	// import a list of modules into the list
-	list.i = function(modules, mediaQuery) {
-		if(typeof modules === "string")
-			modules = [[null, modules, ""]];
-		var alreadyImportedModules = {};
-		for(var i = 0; i < this.length; i++) {
-			var id = this[i][0];
-			if(typeof id === "number")
-				alreadyImportedModules[id] = true;
-		}
-		for(i = 0; i < modules.length; i++) {
-			var item = modules[i];
-			// skip already imported module
-			// this implementation is not 100% perfect for weird media query combinations
-			//  when a module is imported multiple times with different media queries.
-			//  I hope this will never occur (Hey this way we have smaller bundles)
-			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-				if(mediaQuery && !item[2]) {
-					item[2] = mediaQuery;
-				} else if(mediaQuery) {
-					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-				}
-				list.push(item);
-			}
-		}
-	};
-	return list;
+      if (item[2]) {
+        return '@media ' + item[2] + '{' + content + '}';
+      } else {
+        return content;
+      }
+    }).join('');
+  }; // import a list of modules into the list
+
+
+  list.i = function (modules, mediaQuery) {
+    if (typeof modules === 'string') {
+      modules = [[null, modules, '']];
+    }
+
+    var alreadyImportedModules = {};
+
+    for (var i = 0; i < this.length; i++) {
+      var id = this[i][0];
+
+      if (id != null) {
+        alreadyImportedModules[id] = true;
+      }
+    }
+
+    for (i = 0; i < modules.length; i++) {
+      var item = modules[i]; // skip already imported module
+      // this implementation is not 100% perfect for weird media query combinations
+      // when a module is imported multiple times with different media queries.
+      // I hope this will never occur (Hey this way we have smaller bundles)
+
+      if (item[0] == null || !alreadyImportedModules[item[0]]) {
+        if (mediaQuery && !item[2]) {
+          item[2] = mediaQuery;
+        } else if (mediaQuery) {
+          item[2] = '(' + item[2] + ') and (' + mediaQuery + ')';
+        }
+
+        list.push(item);
+      }
+    }
+  };
+
+  return list;
 };
 
 function cssWithMappingToString(item, useSourceMap) {
-	var content = item[1] || '';
-	var cssMapping = item[3];
-	if (!cssMapping) {
-		return content;
-	}
+  var content = item[1] || '';
+  var cssMapping = item[3];
 
-	if (useSourceMap && typeof btoa === 'function') {
-		var sourceMapping = toComment(cssMapping);
-		var sourceURLs = cssMapping.sources.map(function (source) {
-			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
-		});
+  if (!cssMapping) {
+    return content;
+  }
 
-		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
-	}
+  if (useSourceMap && typeof btoa === 'function') {
+    var sourceMapping = toComment(cssMapping);
+    var sourceURLs = cssMapping.sources.map(function (source) {
+      return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */';
+    });
+    return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
+  }
 
-	return [content].join('\n');
-}
+  return [content].join('\n');
+} // Adapted from convert-source-map (MIT)
 
-// Adapted from convert-source-map (MIT)
+
 function toComment(sourceMap) {
-	// eslint-disable-next-line no-undef
-	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
-	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
-
-	return '/*# ' + data + ' */';
+  // eslint-disable-next-line no-undef
+  var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
+  var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+  return '/*# ' + data + ' */';
 }
-
 
 /***/ })
 /******/ ]);
@@ -263,19 +283,19 @@ Prints in node.js (`enhanced-require example.js`) and in browser:
 
 ```
 Hash: 0a1b2c3d4e5f6a7b8c9d
-Version: webpack 4.8.0
-    Asset     Size  Chunks             Chunk Names
-output.js  6.2 KiB       0  [emitted]  main
+Version: webpack 4.39.0
+    Asset      Size  Chunks             Chunk Names
+output.js  7.34 KiB       0  [emitted]  main
 Entrypoint main = output.js
-chunk    {0} output.js (main) 2.65 KiB [entry] [rendered]
-    > .\example.js main
- [0] ./example.js 210 bytes {0} [built]
-     single entry .\example.js  main
+chunk    {0} output.js (main) 2.76 KiB [entry] [rendered]
+    > ./example.js main
+ [0] ./example.js 204 bytes {0} [built]
+     single entry ./example.js  main
  [1] ./loader.js!./file.js 41 bytes {0} [built]
      cjs require ./loader!./file [0] ./example.js 2:12-38
- [2] (webpack)/node_modules/css-loader!./test.css 205 bytes {0} [built]
-     cjs require !css-loader!./test.css [0] ./example.js 6:12-45
+ [2] (webpack)/node_modules/css-loader/dist/cjs.js!./test.css 179 bytes {0} [built]
      cjs require ./test.css [0] ./example.js 5:12-33
+     cjs require !css-loader!./test.css [0] ./example.js 6:12-45
      + 1 hidden module
 ```
 
@@ -283,18 +303,18 @@ chunk    {0} output.js (main) 2.65 KiB [entry] [rendered]
 
 ```
 Hash: 0a1b2c3d4e5f6a7b8c9d
-Version: webpack 4.8.0
+Version: webpack 4.39.0
     Asset      Size  Chunks             Chunk Names
-output.js  1.51 KiB       0  [emitted]  main
+output.js  1.88 KiB       0  [emitted]  main
 Entrypoint main = output.js
-chunk    {0} output.js (main) 2.65 KiB [entry] [rendered]
-    > .\example.js main
- [0] (webpack)/node_modules/css-loader!./test.css 205 bytes {0} [built]
-     cjs require !css-loader!./test.css [3] ./example.js 6:12-45
-     cjs require ./test.css [3] ./example.js 5:12-33
+chunk    {0} output.js (main) 2.76 KiB [entry] [rendered]
+    > ./example.js main
+ [0] (webpack)/node_modules/css-loader/dist/cjs.js!./test.css 179 bytes {0} [built]
+     cjs require ./test.css [1] ./example.js 5:12-33
+     cjs require !css-loader!./test.css [1] ./example.js 6:12-45
+ [1] ./example.js 204 bytes {0} [built]
+     single entry ./example.js  main
  [2] ./loader.js!./file.js 41 bytes {0} [built]
-     cjs require ./loader!./file [3] ./example.js 2:12-38
- [3] ./example.js 210 bytes {0} [built]
-     single entry .\example.js  main
+     cjs require ./loader!./file [1] ./example.js 2:12-38
      + 1 hidden module
 ```

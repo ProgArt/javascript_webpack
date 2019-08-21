@@ -7,7 +7,7 @@ work is not in vain.
 
 ## Issues
 
-Most of the time, if webpack is not working correctly for you it is a simple configuration issue.
+Most of the time, if webpack is not working correctly for you, it is a simple configuration issue.
 
 If you are still having difficulty after looking over your configuration carefully, please post
 a question to [StackOverflow with the webpack tag](http://stackoverflow.com/tags/webpack). Questions
@@ -35,11 +35,11 @@ If you have created your own loader/plugin please include it on the relevant doc
 
 ## Submitting Changes
 
-After getting some feedback, push to your fork and submit a pull request. We
+After getting some feedbacks, push to your fork and submit a pull request. We
 may suggest some changes or improvements or alternatives, but for small changes
 your pull request should be accepted quickly.
 
-Some things that will increase the chance that your pull request is accepted:
+Something that will increase the chance that your pull request is accepted:
 
 * [Write tests](./test/README.md)
 * Follow the existing coding style
@@ -49,7 +49,8 @@ Some things that will increase the chance that your pull request is accepted:
 
 webpack is insanely feature rich and documentation is a huge time sink. We
 greatly appreciate any time spent fixing typos or clarifying sections in the
-documentation. [See a list of issues with the documentation tag.](https://github.com/webpack/webpack/labels/documentation)
+documentation. [See a list of issues with the documentation tag](https://github.com/webpack/webpack/labels/documentation),
+or [check out the issues on the documentation website's repository](https://github.com/webpack/webpack.js.org/issues).
 
 ## Discussions
 
